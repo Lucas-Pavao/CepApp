@@ -13,13 +13,31 @@ class ConsultaCep extends StatefulWidget {
 class _ConsultaCepState extends State<ConsultaCep> {
   int _selectedIndex = -1;
 
+  bool cepsCarregados = false;
+
   @override
   Widget build(BuildContext context) {
     final ConsultaCepController consultaCepController =
         Provider.of<ConsultaCepController>(context);
-    setState(() {
+
+    if (consultaCepController.snackbarMessage.isNotEmpty) {
+      // Se a mensagem não estiver vazia, agende a exibição da Snackbar após o build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(consultaCepController.snackbarMessage),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      });
+    }
+
+    // Verifique se os CEPs ainda não foram carregados
+    if (!cepsCarregados) {
       consultaCepController.carregaCeps();
-    });
+      cepsCarregados = true; // Marque como carregado para evitar recarregar
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Consulta CEP'),
@@ -37,6 +55,25 @@ class _ConsultaCepState extends State<ConsultaCep> {
                         hintText: 'Digite o CEP',
                         icon: Icon(Icons.location_on)),
                     controller: consultaCepController.cepController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        consultaCepController.setSnacbarmessage(
+                            "Por favor, digite um CEP válido!");
+                      }
+
+                      // Remova espaços e hífens do valor do CEP
+                      final cleanedValue =
+                          value?.replaceAll(RegExp(r'[ -]'), '');
+
+                      // Verifique se o CEP tem exatamente 8 dígitos
+                      if (cleanedValue?.length != 8 ||
+                          !RegExp(r'^[0-9]+$').hasMatch(cleanedValue!)) {
+                        consultaCepController.setSnacbarmessage(
+                            "Por favor, digite um CEP válido!");
+                      }
+
+                      return null;
+                    },
                   ),
                 ),
                 ElevatedButton(
@@ -86,6 +123,9 @@ class _ConsultaCepState extends State<ConsultaCep> {
                                         label: 'Excluir',
                                         onPressed: () {
                                           // Remova o item da lista quando a ação for pressionada
+                                          consultaCepController.deleteCep(
+                                              consultaCepController
+                                                  .ceps[index]);
                                           setState(() {
                                             _selectedIndex =
                                                 -1; // Ressalta a cor para o branco
@@ -108,6 +148,126 @@ class _ConsultaCepState extends State<ConsultaCep> {
                             child: ListRow(
                               cep: consultaCepController.ceps[index],
                               isSelected: isSelected,
+                              onTap: () {
+                                showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    final keyboardHeight =
+                                        MediaQuery.of(context)
+                                            .viewInsets
+                                            .bottom;
+
+                                    return SingleChildScrollView(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: keyboardHeight,
+                                          top: 10,
+                                          left: 10,
+                                          right:
+                                              10, // Defina a margem inferior para a altura do teclado
+                                        ),
+                                        child: SizedBox(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.4,
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              const Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    'Editar CEP',
+                                                    style: TextStyle(
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  Icon(
+                                                    Icons.edit,
+                                                    size: 20,
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 16),
+                                              TextFormField(
+                                                controller:
+                                                    TextEditingController(
+                                                  text: consultaCepController
+                                                      .ceps[index].logradouro,
+                                                ),
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: 'Logradouro',
+                                                ),
+                                                onChanged: (value) {
+                                                  consultaCepController
+                                                      .ceps[index]
+                                                      .logradouro = value;
+                                                },
+                                              ),
+                                              const SizedBox(height: 16),
+                                              TextFormField(
+                                                controller:
+                                                    TextEditingController(
+                                                  text: consultaCepController
+                                                      .ceps[index].bairro,
+                                                ),
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: 'Bairro',
+                                                ),
+                                                onChanged: (value) {
+                                                  consultaCepController
+                                                      .ceps[index]
+                                                      .bairro = value;
+                                                },
+                                              ),
+                                              const SizedBox(height: 16),
+                                              TextFormField(
+                                                controller:
+                                                    TextEditingController(
+                                                  text: consultaCepController
+                                                      .ceps[index].localidade,
+                                                ),
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: 'Cidade',
+                                                ),
+                                                onChanged: (value) {
+                                                  consultaCepController
+                                                      .ceps[index]
+                                                      .localidade = value;
+                                                },
+                                              ),
+                                              const SizedBox(height: 16),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  consultaCepController
+                                                      .updateCep(
+                                                    consultaCepController
+                                                        .ceps[index],
+                                                  );
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text('Salvar'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             ),
                           );
                         } else {
@@ -115,7 +275,8 @@ class _ConsultaCepState extends State<ConsultaCep> {
                           return const SizedBox
                               .shrink(); // Ou qualquer outro widget vazio.
                         }
-                      }),
+                      },
+                    ),
             ),
           ],
         ),

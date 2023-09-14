@@ -2,9 +2,14 @@ import 'package:cepapp/model/viacep_model.dart';
 import 'package:flutter/material.dart';
 
 class ListRow extends StatelessWidget {
-  ListRow({super.key, required this.cep, required this.isSelected});
+  ListRow(
+      {super.key,
+      required this.cep,
+      required this.isSelected,
+      required this.onTap});
   bool isSelected = false;
   ViaCepModel cep;
+  Function() onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,7 @@ class ListRow extends StatelessWidget {
             ),
           ]),
           IconButton(
-            onPressed: () {},
+            onPressed: onTap,
             icon: Icon(Icons.edit,
                 color: isSelected ? Colors.white : Colors.indigo),
           ),
