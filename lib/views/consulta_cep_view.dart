@@ -12,7 +12,7 @@ class ConsultaCep extends StatefulWidget {
 
 class _ConsultaCepState extends State<ConsultaCep> {
   int _selectedIndex = -1;
-
+  FocusNode cepFocusNode = FocusNode();
   bool cepsCarregados = false;
 
   @override
@@ -55,6 +55,8 @@ class _ConsultaCepState extends State<ConsultaCep> {
                         hintText: 'Digite o CEP',
                         icon: Icon(Icons.location_on)),
                     controller: consultaCepController.cepController,
+                    focusNode: cepFocusNode,
+                    keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         consultaCepController.setSnacbarmessage(
@@ -80,6 +82,8 @@ class _ConsultaCepState extends State<ConsultaCep> {
                   onPressed: () {
                     consultaCepController
                         .consultaCep(consultaCepController.cepController.text);
+                    consultaCepController.cepController.clear();
+                    cepFocusNode.unfocus();
                   },
                   child: const Text('Consultar'),
                 ),

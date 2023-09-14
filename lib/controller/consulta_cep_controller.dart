@@ -34,11 +34,11 @@ class ConsultaCepController extends ChangeNotifier {
       _snackbarMessage = "CEP cadastrado com sucesso!";
     } else {
       _snackbarMessage = "CEP já cadastrado!";
+      notifyListeners();
     }
-    notifyListeners();
 
     // Redefina a variável snackbarMessage após um curto período
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 1), () {
       _snackbarMessage = '';
       notifyListeners();
     });
